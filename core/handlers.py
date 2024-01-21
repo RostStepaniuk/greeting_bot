@@ -5,11 +5,17 @@ from .import config
 from .import utils
 import os
 from dotenv import load_dotenv
+from .import database
+
 
 load_dotenv()
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
+    # Виклик функції для додавання користувача до БД
+    database.add_user_to_db(
+        user.id, user.username, user.first_name, user.last_name, update.message.chat.id
+    )
     name_to_use = user.first_name or user.username
     personal_greeting = f"{name_to_use}, {config.WELCOME_TEXT}"
 
@@ -23,21 +29,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def staff_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.message.from_user
-    name_to_use = user.first_name or user.username
     if update.message.from_user.username in config.ALLOWED_USERS:
-        cancel_button = InlineKeyboardButton(text="Cancel", callback_data="cancel_change")
-        keyboard = InlineKeyboardMarkup([[cancel_button]])
-        await update.message.reply_text(
-            f"Current Text: \n{name_to_use}, {config.WELCOME_TEXT}",
-            reply_markup=keyboard
-        )
-        context.user_data['change_text'] = True
+        greeting_button = InlineKeyboardButton(text="Greeting Message", callback_data="edit_greeting")
+        users_list_button = InlineKeyboardButton(text="Users List", callback_data="show_users")
+        keyboard = InlineKeyboardMarkup([[greeting_button, users_list_button]])
+
+        # Відправка повідомлення з кнопками
+        await update.message.reply_text("Choose function:", reply_markup=keyboard)
     else:
         await update.message.reply_text("Sorry, it's only for me.")
 
 
 # Схожим чином додаєте інші обробники
+        
+
 
 def register_handlers(application):
     application.add_handler(CommandHandler("start", start))

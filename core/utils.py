@@ -1,14 +1,34 @@
 # Додаткові утиліти та допоміжні функції.
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from dotenv import load_dotenv
 from .import config
+from datetime import datetime
+from .database import get_users_from_db
 
 load_dotenv()
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+
+    user = query.from_user
+    name_to_use = user.first_name or user.username
+    # Якщо користувач обрав редагування вітального повідомлення
+    if query.data == "edit_greeting":
+        cancel_button = InlineKeyboardButton(text="Cancel", callback_data="cancel_change")
+        keyboard = InlineKeyboardMarkup([[cancel_button]])
+        await query.edit_message_text(
+            text=f"Current Text: \n{name_to_use}, {config.WELCOME_TEXT}",
+            reply_markup=keyboard
+        )
+        context.user_data['change_text'] = True
+
+    # Логіка для кнопки "Users List"
+    elif query.data == "show_users":
+        users = get_users_from_db()
+        users_list = '\n'.join([f"{user.username} - joined on {user.join_date.isoformat(timespec='seconds')}" for user in users])
+        await query.edit_message_text(text=f"Users List:\n{users_list}")
 
     if query.data == "cancel_change":
         await query.edit_message_text("Changed cancel.")

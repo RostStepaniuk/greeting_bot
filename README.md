@@ -1,4 +1,4 @@
-A simple bot that sends users a link to the group and rules.
+A simple telegram bot that sends users a link to the group and rules.
 
 Saves users to postgres database.
 

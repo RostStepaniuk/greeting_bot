@@ -7,7 +7,6 @@ import os
 from dotenv import load_dotenv
 from .import database
 
-
 load_dotenv()
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -17,8 +16,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user.id, user.username, user.first_name, user.last_name, update.message.chat.id
     )
     name_to_use = user.first_name or user.username
-    personal_greeting = f"{name_to_use}, {config.WELCOME_TEXT}"
-
+    # Загрузка приветственного текста из файла конфигурации
+    WELCOME_TEXT = utils.retrieve_welcome_text()
+    personal_greeting = f"{name_to_use}, {WELCOME_TEXT}"
     username = update.message.from_user.username
     if username in config.ALLOWED_USERS:
         config.ALLOWED_USER_IDS[username] = update.message.chat.id
@@ -37,7 +37,7 @@ async def staff_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Відправка повідомлення з кнопками
         await update.message.reply_text("Choose function:", reply_markup=keyboard)
     else:
-        await update.message.reply_text("Sorry, it's only for me.")
+        await update.message.reply_text("option is only for admin.")
 
 
 # Схожим чином додаєте інші обробники
@@ -51,3 +51,4 @@ def register_handlers(application):
     application.add_handler(MessageHandler(None, utils.change_text))
     loop = asyncio.get_event_loop()
     loop.create_task(utils.notify_restart(application))
+    utils.load_welcome_text()

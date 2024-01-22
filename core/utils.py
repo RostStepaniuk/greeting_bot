@@ -8,6 +8,8 @@ from .database import get_users_from_db
 
 load_dotenv()
 
+
+
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -19,7 +21,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         cancel_button = InlineKeyboardButton(text="Cancel", callback_data="cancel_change")
         keyboard = InlineKeyboardMarkup([[cancel_button]])
         await query.edit_message_text(
-            text=f"Current Text: \n{name_to_use}, {config.WELCOME_TEXT}",
+            text=f"Current Text: \n{name_to_use}, {WELCOME_TEXT}",
             reply_markup=keyboard
         )
         context.user_data['change_text'] = True
@@ -43,8 +45,10 @@ async def change_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if 'change_text' in context.user_data and context.user_data['change_text'] and update.message.text:
         global WELCOME_TEXT
         WELCOME_TEXT = update.message.text
-        await update.message.reply_text("Updated successfully!")
-        context.user_data['change_text'] = False
+        save_welcome_text(WELCOME_TEXT)  # Сохранение обновленного текста в файл конфигурации
+        await update.message.reply_text("Приветственный текст успешно обновлен!")
+
+        context.user_data['change_text'] = False  # Сброс флага изменения текста
 
 # Інші допоміжні функції
         
@@ -56,3 +60,22 @@ async def notify_restart(application):
             print(f"Не вдалося надіслати повідомлення користувачу {username} (ID: {user_id}): {e}")
 
 
+import json
+
+CONFIG_FILE = 'config.json'
+
+def save_welcome_text(text):
+    with open(CONFIG_FILE, 'w') as f:
+        json.dump({'WELCOME_TEXT': text}, f)
+
+def retrieve_welcome_text():
+    try: 
+        with open(CONFIG_FILE, 'r') as f:
+            config = json.load(f)
+            return config.get('WELCOME_TEXT', "Welcome!")  # Возвращает текст по умолчанию, если не найден
+    except FileNotFoundError:
+        return "Welcome!"  # Возвращает текст по умолчанию, если файл конфигурации не найден
+
+def load_welcome_text():
+    global WELCOME_TEXT
+    WELCOME_TEXT = retrieve_welcome_text()

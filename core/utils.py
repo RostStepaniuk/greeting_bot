@@ -72,7 +72,7 @@ def retrieve_welcome_text():
     try: 
         with open(CONFIG_FILE, 'r') as f:
             config = json.load(f)
-            return config.get('WELCOME_TEXT', "Welcome!")  # Возвращает текст по умолчанию, если не найден
+            return config.get('WELCOME_TEXT', "Welcome!")  
     except FileNotFoundError:
         return "Welcome!"  # Возвращает текст по умолчанию, если файл конфигурации не найден
 
